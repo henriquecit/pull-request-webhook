@@ -1,0 +1,55 @@
+name: Pull Request Creation Webhook
+on:
+  pull_request:
+    types: [opened]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Google Chat Notification
+      run: |
+          curl --location --request POST '${{ secrets.WEBHOOK }}&threadKey=$${{ github.event.pull_request.number }}' \
+          --header 'Content-Type: application/json' \
+          --data-raw '{
+              "cards": [
+                  {
+                      "header": {
+                          "title": "Pull Request",
+                          "subtitle": "${{ github.event.pull_request.title }}"
+                      },
+                      "sections": [
+                          {
+                              "widgets": [
+                                  {
+                                     "keyValue": {
+                                          "topLabel": "Repository",
+                                          "content": "${{ github.event.repository.name }}"
+                                      },
+                                   },
+                                  {
+                                     "keyValue": {
+                                          "topLabel": "Creator",
+                                          "content": "${{ github.event.pull_request.user.login }}"
+                                      },
+                                   },
+                                   {
+                                      "buttons": [
+                                          {
+                                              "textButton": {
+                                                  "text": "OPEN Pull Request",
+                                                  "onClick": {
+                                                      "openLink": {
+                                                          "url": "${{ github.event.pull_request.html_url }}"
+                                                      }
+                                                  }
+                                              }
+                                          }
+                                      ]
+                                  }
+                              ]
+                          }
+                      ]
+                  }
+              ]
+          }'
